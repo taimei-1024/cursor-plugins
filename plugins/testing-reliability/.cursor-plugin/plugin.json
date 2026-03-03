@@ -9,5 +9,5 @@
   },
   "license": "MIT",
   "keywords": ["cursor", "plugin", "testing", "reliability", "datadog", "performance"],
-  "logo": "assets/cursor.png"
+  "logo": "assets/testing.png"
 }
