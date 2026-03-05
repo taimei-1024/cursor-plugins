@@ -1,8 +1,10 @@
 # Cursor Trial Plugins
 
-An example Team Marketplace that includes a set of starter plugins for Cursor.
+An  Team Marketplace that includes a set of starter plugins for Taimei.
 
 ## Included plugins
+
+## Example plugins
 
 This repo currently ships five grouped plugins:
 
@@ -20,6 +22,7 @@ This repo currently ships five grouped plugins:
 - `plugins/<plugin-name>/skills`: skill folders with `SKILL.md`
 - `plugins/<plugin-name>/agents`: subagent definitions
 - `plugins/<plugin-name>/mcp.json`: MCP server configuration for each plugin
+- `examples/<plugin-name>`: example plugins 
 
 ## Validate changes
 

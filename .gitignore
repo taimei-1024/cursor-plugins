@@ -10,5 +10,6 @@
 
 # Logs and temp
 *.log
+logs
 tmp/
 temp/
