@@ -1,0 +1,21 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "taimei-plugins",
+  "description": "A set of starter plugins for Taimei.",
+  "owner": {
+    "name": "Taimei",
+    "email": "taimei@taimeitech.com"
+  },
+  "plugins": [
+    {
+      "name": "aitd",
+      "source": "./plugins/aitd",
+      "description": "AI 辅助技术设计：需求分析、原型评审、PRD 排雷、图表生成、设计评审",
+      "version": "0.2.0",
+      "author": {
+        "name": "Taimei",
+        "email": "taimei@taimeitech.com"
+      }
+    }
+  ]
+}

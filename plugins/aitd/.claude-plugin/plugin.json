@@ -1,0 +1,8 @@
+{
+  "name": "aitd",
+  "description": "AI 辅助技术设计全生命周期：需求分析、原型评审、PRD 排雷、图表生成、表结构提取、设计评审",
+  "author": {
+    "name": "Taimei",
+    "email": "taimei@taimeitech.com"
+  }
+}
