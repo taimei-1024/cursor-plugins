@@ -5,7 +5,7 @@ description: 安全漏洞自查，基于 OWASP Top 10 + 业务安全检查清单
 
 # 安全自查
 
-请使用 tech-design-review 技能执行安全自查。
+请使用 security-check 技能执行安全自查。
 
 **使用方式**：
 - `/aitd-security-check <设计文档内容>`

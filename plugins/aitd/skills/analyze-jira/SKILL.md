@@ -1,6 +1,6 @@
 ---
 name: analyze-jira
-description: 从 Jira 获取需求详情、分析附件图片、输出结构化需求分析文档。当用户提及 Jira 工单、需求详情、查看需求、TM-XXX/PVS-XXX 工单号、分析 Jira 时触发。
+description: 从 Jira 获取需求详情、分析附件图片、输出结构化需求分析文档。当用户提及 Jira 工单、需求详情、查看需求、任何 Jira 工单号（如 TM-XXX、PVS-XXX、PROJ-123 等格式）、分析 Jira、"帮我看下这个需求" 时触发。
 ---
 
 ## Purpose

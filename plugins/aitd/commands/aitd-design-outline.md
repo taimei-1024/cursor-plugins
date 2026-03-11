@@ -5,7 +5,7 @@ description: 生成技术设计文档大纲，支持总体设计/后端详细设
 
 # 生成设计大纲
 
-请使用 tech-design-review 技能生成技术设计文档大纲。
+请使用 design-outline 技能生成技术设计文档大纲。
 
 **使用方式**：
 - `/aitd-design-outline` - 根据需求类型自动选择模板

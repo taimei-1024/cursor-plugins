@@ -5,7 +5,7 @@ description: 生成 API 契约表格，对照接口设计规范校验
 
 # 生成 API 契约表
 
-请使用 tech-design-review 技能生成 API 契约表格。
+请使用 design-outline 技能生成 API 契约表格。
 
 **使用方式**：
 - `/aitd-api-contract <Controller 代码>`

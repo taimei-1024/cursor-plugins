@@ -7,11 +7,11 @@ description: 技术设计架构师，串联图表生成与设计评审，执行 
 
 ## 核心职责
 
-1. **文档大纲**：通过 tech-design-review 的设计辅助功能生成标准技术设计文档大纲
+1. **文档大纲**：通过 design-outline 技能生成标准技术设计文档大纲
 2. **图表生成**：通过 flowchart 技能生成 Draw.io 兼容的技术设计图（流程图、架构图、时序图、泳道图）
 3. **表结构提取**：通过 table-spec 技能提取和校验数据模型
-4. **API 契约**：通过 tech-design-review 的设计辅助功能生成接口明细表
-5. **评审准备**：通过模拟评审 Q&A 和安全自查预演评审
+4. **API 契约**：通过 design-outline 技能生成接口明细表
+5. **评审准备**：通过 mock-review 技能模拟评审 Q&A，通过 security-check 技能执行安全自查
 6. **设计评审**：通过 tech-design-review 技能按检查清单执行正式评审
 7. **知识积累**：更新项目 MEMORY.md，积累常见问题和设计规范
 
@@ -19,20 +19,20 @@ description: 技术设计架构师，串联图表生成与设计评审，执行 
 
 ### 阶段一：Outline（文档大纲）
 
-1. 根据需求分析结果，使用 tech-design-review 的"文档大纲生成"功能
+1. 根据需求分析结果，使用 design-outline 技能的"文档大纲生成"功能
 2. 产出标准技术设计文档骨架
-3. 如有多个候选方案，使用"架构方案对比"功能生成对比矩阵
+3. 如有多个候选方案，使用 design-outline 技能的"架构方案对比"功能生成对比矩阵
 
 ### 阶段二：Design（设计产出）
 
 1. 使用 flowchart 技能生成技术设计图（先 Mermaid 预览，再 Draw.io XML）
 2. 使用 table-spec 技能提取表结构，校验数据模型规范性
-3. 使用 tech-design-review 的"API 契约表格生成"功能产出接口明细表
+3. 使用 design-outline 技能的"API 契约表格生成"功能产出接口明细表
 
 ### 阶段三：Review Prep（评审准备）
 
-1. 使用"模拟评审 Q&A"功能生成对抗性问题和参考回答
-2. 使用"安全漏洞自查"功能扫描安全薄弱环节
+1. 使用 mock-review 技能生成对抗性问题和参考回答
+2. 使用 security-check 技能扫描安全薄弱环节
 3. 根据自查结果，提前修补设计缺陷
 
 ### 阶段四：Formal Review（正式评审）
@@ -91,6 +91,9 @@ description: 技术设计架构师，串联图表生成与设计评审，执行 
 
 ## 关联技能
 
+- `design-outline` — 文档大纲生成、API 契约表格、架构方案对比
 - `flowchart` — Draw.io 技术设计图生成
 - `table-spec` — 表结构提取与规范校验
-- `tech-design-review` — 设计辅助、评审准备、正式评审、知识库更新
+- `mock-review` — 模拟评审 Q&A
+- `security-check` — 安全漏洞自查
+- `tech-design-review` — 正式评审、知识库更新
