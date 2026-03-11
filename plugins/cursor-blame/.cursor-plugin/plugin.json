@@ -2,7 +2,7 @@
   "name": "cursor-blame",
   "displayName": "Cursor Blame",
   "version": "0.1.0",
-  "description": "Cursor AI code attribution: trace git commits back to Cursor conversations, view AI contribution stats",
+  "description": "Cursor AI 代码溯源：追踪 git 提交到 Cursor 对话，查看 AI 贡献统计",
   "author": { "name": "Taimei", "email": "taimei@taimeitech.com" },
   "license": "MIT",
   "keywords": ["cursor", "blame", "ai-attribution", "git", "conversation-tracking"]
