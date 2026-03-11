@@ -1,0 +1,8 @@
+{
+  "name": "cursor-blame",
+  "description": "Cursor AI code attribution: trace git commits back to Cursor conversations, view AI contribution stats",
+  "author": {
+    "name": "Taimei",
+    "email": "taimei@taimeitech.com"
+  }
+}
