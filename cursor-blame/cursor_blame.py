@@ -16,9 +16,12 @@ import argparse
 import json
 import os
 import platform
+import re
 import sqlite3
 import subprocess
 import sys
+import urllib.parse
+import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -344,6 +347,44 @@ def get_remote_web_url():
     return url
 
 
+# --- GitLab MR helpers ---
+
+def parse_gitlab_mr_url(url):
+    """Parse a GitLab MR URL, returning (host, project_path, mr_iid) or None."""
+    m = re.match(r'^https?://([^/]+)/(.+?)/-/merge_requests/(\d+)', url)
+    return (m.group(1), m.group(2), int(m.group(3))) if m else None
+
+
+def gitlab_api_get(host, endpoint, token=None):
+    """Send a GET request to GitLab API, return parsed JSON."""
+    url = f"https://{host}/api/v4{endpoint}"
+    req = urllib.request.Request(url)
+    if token:
+        req.add_header("PRIVATE-TOKEN", token)
+    try:
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            return json.loads(resp.read().decode())
+    except urllib.error.HTTPError as e:
+        if e.code in (401, 403, 404):
+            raise RuntimeError(
+                f"GitLab API returned {e.code} for {url}"
+                + ("" if token else "\n  → Set GITLAB_PRIVATE_TOKEN for private repos")
+            )
+        raise
+
+
+def fetch_mr_info(host, project_path, mr_iid, token=None):
+    """Fetch MR metadata (title, author, state, branches)."""
+    encoded = urllib.parse.quote(project_path, safe="")
+    return gitlab_api_get(host, f"/projects/{encoded}/merge_requests/{mr_iid}", token)
+
+
+def fetch_mr_commits(host, project_path, mr_iid, token=None):
+    """Fetch all commits in a MR (up to 100)."""
+    encoded = urllib.parse.quote(project_path, safe="")
+    return gitlab_api_get(host, f"/projects/{encoded}/merge_requests/{mr_iid}/commits?per_page=100", token)
+
+
 def commit_link(commit_hash, display=None):
     """Render a commit hash as a clickable terminal hyperlink to the web UI."""
     short = display or commit_hash[:10]
@@ -363,6 +404,7 @@ def conversation_link(name):
     """
     return c_bold(name)
 def c_green(text):  return _c("32", text)
+def c_yellow(text): return _c("33", text)
 def c_red(text):    return _c("31", text)
 
 
@@ -1281,6 +1323,73 @@ def cmd_commit(args):
     state_db.close()
 
 
+def cmd_mr(args):
+    """Analyze all commits from a GitLab MR."""
+    parsed = parse_gitlab_mr_url(args.mr_url)
+    if not parsed:
+        print(f"Error: Invalid GitLab MR URL: {args.mr_url}", file=sys.stderr)
+        sys.exit(1)
+
+    host, project_path, mr_iid = parsed
+    token = os.environ.get("GITLAB_PRIVATE_TOKEN")
+
+    # Warn if current repo doesn't match the MR URL
+    remote_url = get_remote_web_url()
+    mr_project_url = f"https://{host}/{project_path}"
+    if remote_url and remote_url.rstrip("/").lower() != mr_project_url.lower():
+        print(c_yellow(f"Warning: Current repo ({remote_url}) differs from MR project ({mr_project_url})"))
+        print()
+
+    # Fetch MR info & commits via API
+    try:
+        mr_info = fetch_mr_info(host, project_path, mr_iid, token)
+        commits = fetch_mr_commits(host, project_path, mr_iid, token)
+    except RuntimeError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        print(file=sys.stderr)
+        print("Two ways to proceed:", file=sys.stderr)
+        print(f"  1. Set token:  export GITLAB_PRIVATE_TOKEN=glpat-xxx", file=sys.stderr)
+        print(f"  2. Copy commit hashes from the MR Commits tab and run:", file=sys.stderr)
+        print(f"     python3 cursor_blame.py commit <hash1>", file=sys.stderr)
+        print(f"     python3 cursor_blame.py commit <hash2>", file=sys.stderr)
+        sys.exit(1)
+
+    mr_title = mr_info.get("title", "")
+    mr_author = mr_info.get("author", {}).get("name", mr_info.get("author", {}).get("username", ""))
+    mr_state = mr_info.get("state", "")
+    source_branch = mr_info.get("source_branch", "")
+    target_branch = mr_info.get("target_branch", "")
+
+    # Print MR header
+    print(c_bold(f"MR !{mr_iid}: {mr_title}"))
+    print(f"  Author: {mr_author}")
+    print(f"  State:  {mr_state}")
+    print(f"  Branch: {source_branch} → {target_branch}")
+    print(f"  URL:    {args.mr_url}")
+    print()
+
+    # API returns newest first, reverse for chronological order
+    commits.reverse()
+
+    print(c_bold(f"Commits ({len(commits)})"))
+    for i, c in enumerate(commits, 1):
+        short = c["short_id"] if "short_id" in c else c["id"][:10]
+        print(f"  {i}. {short} {c.get('title', '')}")
+    print()
+
+    # Analyze each commit
+    for i, c in enumerate(commits, 1):
+        commit_hash = c["id"]
+        print(c_dim("=" * 60))
+        print(c_dim(f"[{i}/{len(commits)}]"))
+        try:
+            commit_args = argparse.Namespace(commit=commit_hash, verbose=getattr(args, "verbose", False))
+            cmd_commit(commit_args)
+        except SystemExit:
+            print(c_dim(f"  Skipped: commit {commit_hash[:10]} not found locally"))
+        print()
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Cursor Blame - trace git commits back to Cursor AI conversations"
@@ -1315,6 +1424,11 @@ def main():
     chat_parser.add_argument("conversation_id", help="Conversation/Composer ID")
     chat_parser.add_argument("--short", "-s", action="store_true", help="Truncate long messages")
 
+    # mr (GitLab MR analysis)
+    mr_parser = subparsers.add_parser("mr", help="Analyze commits from a GitLab MR URL")
+    mr_parser.add_argument("mr_url", help="GitLab MR URL")
+    mr_parser.add_argument("--verbose", "-v", action="store_true", help="Show full conversation messages")
+
     # stats
     subparsers.add_parser("stats", help="Show overall statistics")
 
@@ -1324,8 +1438,13 @@ def main():
     if not args.command:
         if len(sys.argv) > 1 and not sys.argv[1].startswith("-"):
             candidate = sys.argv[1]
+            # Check if it looks like a GitLab MR URL
+            if parse_gitlab_mr_url(candidate):
+                args.command = "mr"
+                args.mr_url = candidate
+                args.verbose = "-v" in sys.argv or "--verbose" in sys.argv
             # Check if it looks like a file path
-            if os.path.exists(candidate):
+            elif os.path.exists(candidate):
                 args.command = "file"
                 args.file = candidate
                 args.lines = None
@@ -1348,6 +1467,8 @@ def main():
         cmd_log(args)
     elif args.command == "chat":
         cmd_chat(args)
+    elif args.command == "mr":
+        cmd_mr(args)
     elif args.command == "stats":
         cmd_stats(args)
 

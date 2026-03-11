@@ -1,6 +1,6 @@
 ---
 name: cursor-blame
-description: 通过 git commit 反查产生该 commit 的 Cursor AI 对话，查看文件级行归因、AI 贡献占比、模型追踪、对话上下文。当用户提及"cursor blame"、"AI 代码归因"、"这个 commit 是 AI 写的吗"、"查看 AI 对话"、"AI 贡献统计"、"哪些代码是 AI 生成的"、"追溯 commit 对话"、"AI 代码占比"、"这个文件哪些是 AI 写的"、commit hash + "对话"/"conversation" 时触发。也适用于用户想了解某段代码的 AI 生成上下文、查看 Cursor 对话历史、或分析项目的 AI 辅助编码情况。
+description: 通过 git commit 反查产生该 commit 的 Cursor AI 对话，查看文件级行归因、AI 贡献占比、模型追踪、对话上下文。支持 GitLab MR URL 批量分析。当用户提及"cursor blame"、"AI 代码归因"、"这个 commit 是 AI 写的吗"、"查看 AI 对话"、"AI 贡献统计"、"哪些代码是 AI 生成的"、"追溯 commit 对话"、"AI 代码占比"、"这个文件哪些是 AI 写的"、commit hash + "对话"/"conversation"、"MR"、"merge request"、"合并请求" 时触发。也适用于用户想了解某段代码的 AI 生成上下文、查看 Cursor 对话历史、或分析项目的 AI 辅助编码情况。
 ---
 
 ## Purpose
@@ -80,7 +80,23 @@ python3 {SCRIPT_PATH} log [--since YYYY-MM-DD] [--until YYYY-MM-DD] [-n 50]
 python3 {SCRIPT_PATH} chat <conversation-id> [-s]
 ```
 
-### 6. stats -- 汇总统计
+### 6. mr -- 分析 GitLab MR 的所有 commit
+
+```bash
+python3 {SCRIPT_PATH} mr <gitlab-mr-url> [-v]
+```
+
+粘贴 GitLab MR 地址，自动拉取 MR 中的所有 commit 并逐个分析 AI 归因：
+- 显示 MR 元信息（标题/作者/状态/分支）
+- 按时间正序逐个分析每个 commit 的 AI 归因
+- 本地不存在的 commit 自动跳过
+- 需要设置 `GITLAB_PRIVATE_TOKEN` 环境变量访问私有仓库
+
+URL 格式示例：`https://git.taimei.com/tmxc/eimage/eimage-front/-/merge_requests/2164`
+
+**自动检测**: 直接传入 MR URL 作为参数即可，无需显式指定 `mr` 子命令。
+
+### 7. stats -- 汇总统计
 
 ```bash
 python3 {SCRIPT_PATH} stats
@@ -94,6 +110,7 @@ python3 {SCRIPT_PATH} stats
 
 3. **选择命令**:
    - 用户给 commit hash -> 用 `commit`（概览）或 `blame`（看对话）
+   - 用户给 GitLab MR URL -> 用 `mr`（批量分析 MR 内所有 commit）
    - 用户问某个文件 -> 用 `file`
    - 用户想看整体统计 -> 用 `stats`
    - 用户想看某段时间的 commit -> 用 `log`
@@ -106,6 +123,8 @@ python3 {SCRIPT_PATH} stats
    - 一个 commit 可能关联多个对话（多轮交互产出）
 
 5. **Merge commit**: `commit` 命令自动检测并展开 merge commit 内部的实际 commit。
+
+6. **输出规则**: 脚本执行后，**原样输出程序结果**，不要总结、改写或省略。用户需要看到完整的原始输出。
 
 ## Limitations
 
