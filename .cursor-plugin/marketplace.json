@@ -14,6 +14,11 @@
       "name": "aitd",
       "source": "aitd",
       "description": "AI 辅助技术设计：需求分析、原型评审、PRD 排雷、图表生成、设计评审"
+    },
+    {
+      "name": "cursor-blame",
+      "source": "cursor-blame",
+      "description": "Cursor AI 代码溯源：追踪 git 提交到 Cursor 对话，查看 AI 贡献统计"
     }
   ]
 }
