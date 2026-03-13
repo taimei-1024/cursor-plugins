@@ -15,7 +15,7 @@ description: 读取和编辑 Confluence 页面内容。支持删除/添加表格
 ## Scripts
 
 脚本位于 `${SKILL_DIR}/scripts/` 目录下：
-- `cf_api.py` — Confluence REST API 封装（获取/更新页面）
+- `cf_api.py` — Confluence REST API 封装（获取/更新页面/添加标签）
 - `edit_table.py` — 表格编辑工具（删除/添加列）
 
 ## Instructions
@@ -84,6 +84,14 @@ python3 ${SKILL_DIR}/scripts/cf_api.py update <pageId> "<title>" /tmp/cf_page_<p
 
 - `<version>` 是 Step 2 获取的当前版本号（脚本会自动 +1）
 - 返回新版本号确认成功
+
+回写成功后，自动为页面添加 AI 归因标签：
+
+```bash
+python3 ${SKILL_DIR}/scripts/cf_api.py label <pageId> ai-assisted co-authored-by-<model>
+```
+
+其中 `<model>` 由 AI 根据自身模型名称填写（如 `claude-opus-4-6`），格式统一为小写加连字符。该 API 是幂等的，重复添加不会报错。
 
 ### Step 6: 告知用户
 

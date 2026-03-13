@@ -4,6 +4,7 @@
 Usage:
   python cf_api.py get <page_id>
   python cf_api.py update <page_id> <title> <content_file> <version> [message]
+  python cf_api.py label <page_id> <label1> [label2] ...
 
 Credentials are auto-discovered from the running mcp-atlassian process environment,
 or can be set via CONFLUENCE_URL and CONFLUENCE_PERSONAL_TOKEN env vars.
@@ -185,6 +186,24 @@ def update_page(page_id, title, content_file, version, message="Updated by AI"):
     return output
 
 
+def add_labels(page_id, labels):
+    """Add labels to a page. Idempotent — existing labels are silently ignored."""
+    url, token = get_credentials()
+    base_url = ensure_https(url)
+    api_url = f"{base_url}/rest/api/content/{page_id}/label"
+
+    data = [{"prefix": "global", "name": label} for label in labels]
+    result = api_request("POST", api_url, token, data)
+
+    output = {
+        "success": True,
+        "page_id": page_id,
+        "labels": [r["name"] for r in result.get("results", result if isinstance(result, list) else [])],
+    }
+    print(json.dumps(output, ensure_ascii=False, indent=2))
+    return output
+
+
 def main():
     if len(sys.argv) < 3:
         print(__doc__)
@@ -205,6 +224,13 @@ def main():
         version = sys.argv[5]
         message = sys.argv[6] if len(sys.argv) > 6 else "Updated by AI"
         update_page(page_id, title, content_file, version, message)
+    elif command == "label":
+        if len(sys.argv) < 4:
+            print("Usage: python cf_api.py label <page_id> <label1> [label2] ...")
+            sys.exit(1)
+        page_id = sys.argv[2]
+        labels = sys.argv[3:]
+        add_labels(page_id, labels)
     else:
         print(f"Unknown command: {command}")
         print(__doc__)
