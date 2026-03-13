@@ -19,6 +19,11 @@
       "name": "cursor-blame",
       "source": "cursor-blame",
       "description": "Cursor AI 代码溯源：追踪 git 提交到 Cursor 对话，查看 AI 贡献统计"
+    },
+    {
+      "name": "confluence-editor",
+      "source": "confluence-editor",
+      "description": "读取和编辑 Confluence 页面内容，支持表格操作、章节更新等"
     }
   ]
 }
