@@ -1,44 +1,36 @@
 # Cursor Trial Plugins
 
-An  Team Marketplace that includes a set of starter plugins for Taimei.
+太美团队的 Cursor 插件市场，包含一组内部插件。
 
-## Included plugins
+## 包含的插件
 
-## Example plugins
+- **aitd**: AI 辅助技术设计：需求分析、原型评审、PRD 排雷、图表生成、设计评审
+- **cursor-blame**: Cursor AI 代码溯源：追踪 git 提交到 Cursor 对话，查看 AI 贡献统计
 
-This repo currently ships five grouped plugins:
+## 仓库结构
 
-- **git-workflows**: commit, PR, CI, merge conflict, and branch validation workflows
-- **documentation**: README updates, weekly review summaries, markdown naming, and docs writing
-- **pm**: Ticket-oriented PM workflows with MCP config, ticket writing, and board summarization
-- **design**: wireframes, component design support, and mockup workflow
-- **testing-reliability**: Datadog dashboards, performance optimization, and testing agents
+- `.cursor-plugin/marketplace.json`: 市场清单与插件注册表
+- `plugins/<plugin-name>/.cursor-plugin/plugin.json`: 各插件元数据
+- `plugins/<plugin-name>/rules`: 规则文件（`.mdc`）
+- `plugins/<plugin-name>/skills`: 技能目录，包含 `SKILL.md`
+- `plugins/<plugin-name>/agents`: 子代理定义
+- `plugins/<plugin-name>/mcp.json`: 各插件的 MCP 服务器配置
 
-## Repository structure
+## 校验变更
 
-- `.cursor-plugin/marketplace.json`: marketplace manifest and plugin registry
-- `plugins/<plugin-name>/.cursor-plugin/plugin.json`: per-plugin metadata
-- `plugins/<plugin-name>/rules`: rule files (`.mdc`)
-- `plugins/<plugin-name>/skills`: skill folders with `SKILL.md`
-- `plugins/<plugin-name>/agents`: subagent definitions
-- `plugins/<plugin-name>/mcp.json`: MCP server configuration for each plugin
-- `examples/<plugin-name>`: example plugins 
-
-## Validate changes
-
-Run:
+运行：
 
 ```bash
 node scripts/validate-template.mjs
 ```
 
-This checks marketplace paths, plugin manifests, and required frontmatter in rule/skill/agent/command files.
+该脚本会检查市场路径、插件清单，以及规则/技能/代理/命令文件中的必填 frontmatter。
 
-## Submission checklist
+## 提交检查清单
 
-- Each plugin has a valid `.cursor-plugin/plugin.json`
-- Plugin names are unique, lowercase, and kebab-case
-- `.cursor-plugin/marketplace.json` entries map to real plugin folders
-- Required frontmatter metadata exists in plugin content files
-- Logo paths resolve correctly from each plugin manifest
-- `node scripts/validate-template.mjs` passes
+- 每个插件都有有效的 `.cursor-plugin/plugin.json`
+- 插件名称唯一，使用小写 kebab-case 格式
+- `.cursor-plugin/marketplace.json` 中的条目对应实际的插件目录
+- 插件内容文件中包含必填的 frontmatter 元数据
+- Logo 路径在各插件清单中可正确解析
+- `node scripts/validate-template.mjs` 通过
