@@ -1,4 +1,4 @@
-# Cursor Trial Plugins
+# Taimei Cursor Plugins
 
 太美团队的 Cursor 插件市场，包含一组内部插件。
 
