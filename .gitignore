@@ -13,3 +13,11 @@
 logs
 tmp/
 temp/
+
+# IDE
+.vscode/
+.idea/
+
+# Python
+__pycache__/
+*.pyc

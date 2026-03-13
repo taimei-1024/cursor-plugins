@@ -1,0 +1,8 @@
+{
+  "name": "confluence-editor",
+  "description": "读取和编辑 Confluence 页面内容，支持表格列操作、文本替换、章节修改等",
+  "author": {
+    "name": "Taimei",
+    "email": "taimei@taimeitech.com"
+  }
+}

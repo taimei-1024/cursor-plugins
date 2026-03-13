@@ -6,6 +6,7 @@
 
 - **aitd**: AI 辅助技术设计：需求分析、原型评审、PRD 排雷、图表生成、设计评审
 - **cursor-blame**: Cursor AI 代码溯源：追踪 git 提交到 Cursor 对话，查看 AI 贡献统计
+- **confluence-editor**: 读取和编辑 Confluence 页面内容，支持表格列操作、文本替换、章节修改等
 
 ## 仓库结构
 
