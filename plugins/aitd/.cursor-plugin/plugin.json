@@ -24,5 +24,6 @@
     "documentation"
   ],
   "skills": "./skills/",
-  "agents": "./agents/"
+  "agents": "./agents/",
+  "repository": "git@git.taimei.com:tms-public/cursor-plugins.git"
 }
