@@ -3,7 +3,22 @@
   "displayName": "Confluence Editor",
   "version": "0.1.0",
   "description": "读取和编辑 Confluence 页面内容，支持表格列操作、文本替换、章节修改等",
-  "author": { "name": "Taimei", "email": "taimei@taimeitech.com" },
+  "author": {
+    "name": "Taimei",
+    "email": "taimei@taimeitech.com"
+  },
   "license": "MIT",
-  "keywords": ["cursor", "plugin", "confluence", "wiki", "editor"]
+  "keywords": [
+    "confluence",
+    "wiki",
+    "editor",
+    "table"
+  ],
+  "category": "developer-tools",
+  "tags": [
+    "confluence",
+    "documentation",
+    "wiki-editing"
+  ],
+  "skills": "./skills/"
 }

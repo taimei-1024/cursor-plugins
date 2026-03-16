@@ -3,9 +3,26 @@
   "displayName": "AI Technical Design",
   "version": "0.2.0",
   "description": "AI 辅助技术设计全生命周期：需求分析、原型评审、PRD 排雷、图表生成、表结构提取、设计评审",
-  "author": { "name": "Taimei", "email": "taimei@taimeitech.com" },
+  "author": {
+    "name": "Taimei",
+    "email": "taimei@taimeitech.com"
+  },
   "license": "MIT",
-  "keywords": ["cursor", "plugin", "technical-design", "review", "jira", "architecture"],
   "logo": "assets/aitd.png",
-  "commands": "commands"
+  "keywords": [
+    "technical-design",
+    "review",
+    "jira",
+    "architecture",
+    "prd",
+    "flowchart"
+  ],
+  "category": "developer-tools",
+  "tags": [
+    "design-review",
+    "requirement-analysis",
+    "documentation"
+  ],
+  "skills": "./skills/",
+  "agents": "./agents/"
 }
