@@ -17,6 +17,7 @@ description: 读取和编辑 Confluence 页面内容。支持删除/添加表格
 脚本位于 `${SKILL_DIR}/scripts/` 目录下：
 - `cf_api.py` — Confluence REST API 封装（获取/更新页面/添加标签）
 - `edit_table.py` — 表格编辑工具（删除/添加列）
+- `cf_section.py` — 片段/章节编辑工具（列出/提取/替换/搜索章节）
 
 ## Instructions
 
@@ -98,6 +99,42 @@ python3 ${SKILL_DIR}/scripts/cf_api.py label <pageId> ai-assisted co-authored-by
 - 提供页面链接：`http://cf.taimei.com/pages/viewpage.action?pageId=<pageId>`
 - 提醒可通过 Confluence 版本历史回退
 
+### 选中片段编辑（Fragment Editing）
+
+#### 方式一：按章节选中编辑
+
+- Step A: 获取页面（复用 Step 1-2）
+- Step B: `cf_section.py list` 列出章节结构
+  ```bash
+  python3 ${SKILL_DIR}/scripts/cf_section.py list /tmp/cf_page_<pageId>.html
+  ```
+- Step C: 用户按编号或关键词（`search`）选择片段
+  ```bash
+  python3 ${SKILL_DIR}/scripts/cf_section.py search /tmp/cf_page_<pageId>.html "关键词"
+  ```
+- Step D: `cf_section.py extract` 提取片段，展示给用户
+  ```bash
+  python3 ${SKILL_DIR}/scripts/cf_section.py extract /tmp/cf_page_<pageId>.html <section_index>
+  ```
+- Step E: AI 根据用户意图编辑片段（保持 storage HTML 格式）
+- Step F: `cf_section.py replace` 替换回全文，展示 diff
+  ```bash
+  python3 ${SKILL_DIR}/scripts/cf_section.py replace /tmp/cf_page_<pageId>.html /tmp/cf_page_<pageId>_updated.html <section_index> /tmp/cf_section_<pageId>_<idx>_edited.html
+  ```
+- Step G: `cf_api.py update` 回写 + 添加标签（复用 Step 5-6）
+
+#### 方式二：按引用文本编辑（Quote 模式）
+
+- Step A: 获取页面（复用 Step 1-2），展示 markdown 预览
+- Step B: 用户引用页面中的一段文字，描述修改意图（如"把'旧接口名'改成'新接口名'并补充参数说明"）
+- Step C: `cf_section.py locate` 在 HTML 中精确定位引用文本的位置
+  ```bash
+  python3 ${SKILL_DIR}/scripts/cf_section.py locate /tmp/cf_page_<pageId>.html "用户引用的文字"
+  ```
+- Step D: AI 提取定位到的 HTML 片段 `html[html_start:html_end]`，根据用户意图编辑
+- Step E: 将编辑后的片段拼接回全文 `html[:html_start] + edited + html[html_end:]`，展示 diff
+- Step F: `cf_api.py update` 回写 + 添加标签
+
 ## Critical Notes
 
 以下是从实际编辑经验中总结的关键注意事项：
@@ -109,3 +146,5 @@ python3 ${SKILL_DIR}/scripts/cf_api.py label <pageId> ai-assisted co-authored-by
 5. **大内容不能通过 MCP 工具传递**：始终用 REST API + 文件读写
 6. **SSL 证书**：内部 Confluence 需要跳过 SSL 验证
 7. **编辑前务必备份**：content 保存到 `/tmp/cf_page_<pageId>.html` 即为备份
+8. **片段编辑按 heading 标签切分**：`<pre>` 和 `<ac:plain-text-body>` 内的 heading 被忽略
+9. **Quote 定位基于纯文本搜索**：引用文本需与页面内容基本一致（允许空白差异）
