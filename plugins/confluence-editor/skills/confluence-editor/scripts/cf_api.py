@@ -4,7 +4,6 @@
 Usage:
   python cf_api.py get <page_id>
   python cf_api.py update <page_id> <title> <content_file> <version> [message]
-  python cf_api.py label <page_id> <label1> [label2] ...
 
 Credentials are auto-discovered from the running mcp-atlassian process environment,
 or can be set via CONFLUENCE_URL and CONFLUENCE_PERSONAL_TOKEN env vars.
@@ -28,29 +27,47 @@ def get_credentials():
     if url and token:
         return url, token
 
-    # Try to read from mcp-atlassian process environment
+    # Try to read from mcp-atlassian process command line args
     try:
         ps_output = subprocess.check_output(
             ["ps", "aux"], text=True, stderr=subprocess.DEVNULL
         )
-        pid = None
+        # First pass: prefer processes with --confluence-url in command line
+        # (some processes may be wrapper/child processes without args)
+        best_line = None
+        fallback_line = None
         for line in ps_output.splitlines():
-            if "mcp-atlassian" in line or ("mcp" in line and "confluence" in line.lower()):
-                parts = line.split()
-                pid = parts[1]
+            if "mcp-atlassian" not in line:
+                continue
+            if "--confluence-url" in line or "--confluence-personal-token" in line:
+                best_line = line
                 break
+            elif fallback_line is None:
+                fallback_line = line
 
-        if pid:
-            # macOS: use ps -E to read process environment
-            env_output = subprocess.check_output(
-                ["ps", "-E", "-p", pid], text=True, stderr=subprocess.DEVNULL
-            )
-            for match in re.finditer(r"(\w+)=(\S+)", env_output):
-                key, val = match.group(1), match.group(2)
-                if key == "CONFLUENCE_URL":
-                    url = val
-                elif key == "CONFLUENCE_PERSONAL_TOKEN":
-                    token = val
+        chosen_line = best_line or fallback_line
+
+        if chosen_line:
+            # Try to extract credentials directly from command line args
+            url_match = re.search(r"--confluence-url[= ](\S+)", chosen_line)
+            token_match = re.search(r"--confluence-personal-token[= ](\S+)", chosen_line)
+            if url_match:
+                url = url_match.group(1)
+            if token_match:
+                token = token_match.group(1)
+
+            # Fallback to ps -E if command line parsing didn't work
+            if not (url and token):
+                pid = chosen_line.split()[1]
+                env_output = subprocess.check_output(
+                    ["ps", "-E", "-p", pid], text=True, stderr=subprocess.DEVNULL
+                )
+                for match in re.finditer(r"(\w+)=(\S+)", env_output):
+                    key, val = match.group(1), match.group(2)
+                    if key == "CONFLUENCE_URL" and not url:
+                        url = val
+                    elif key == "CONFLUENCE_PERSONAL_TOKEN" and not token:
+                        token = val
     except (subprocess.CalledProcessError, FileNotFoundError):
         pass
 
@@ -116,7 +133,24 @@ def api_request(method, url, token, data=None):
         body = None
 
     req = urllib.request.Request(url, data=body, headers=headers, method=method)
-    resp = urllib.request.urlopen(req, context=ctx)
+    try:
+        resp = urllib.request.urlopen(req, context=ctx)
+    except urllib.error.HTTPError as e:
+        err_text = e.read().decode("utf-8", errors="replace")
+        print(
+            f"Confluence API HTTP {e.code} {e.reason}: {method} {url}",
+            file=sys.stderr,
+        )
+        print(err_text, file=sys.stderr)
+        if e.code == 409:
+            print(
+                "提示: 409 多为版本冲突，请先执行 get 取最新 version 再 update。",
+                file=sys.stderr,
+            )
+        sys.exit(1)
+    except urllib.error.URLError as e:
+        print(f"Confluence API 请求失败: {e.reason}", file=sys.stderr)
+        sys.exit(1)
     return json.loads(resp.read().decode("utf-8"))
 
 
@@ -186,24 +220,6 @@ def update_page(page_id, title, content_file, version, message="Updated by AI"):
     return output
 
 
-def add_labels(page_id, labels):
-    """Add labels to a page. Idempotent — existing labels are silently ignored."""
-    url, token = get_credentials()
-    base_url = ensure_https(url)
-    api_url = f"{base_url}/rest/api/content/{page_id}/label"
-
-    data = [{"prefix": "global", "name": label} for label in labels]
-    result = api_request("POST", api_url, token, data)
-
-    output = {
-        "success": True,
-        "page_id": page_id,
-        "labels": [r["name"] for r in result.get("results", result if isinstance(result, list) else [])],
-    }
-    print(json.dumps(output, ensure_ascii=False, indent=2))
-    return output
-
-
 def main():
     if len(sys.argv) < 3:
         print(__doc__)
@@ -224,13 +240,6 @@ def main():
         version = sys.argv[5]
         message = sys.argv[6] if len(sys.argv) > 6 else "Updated by AI"
         update_page(page_id, title, content_file, version, message)
-    elif command == "label":
-        if len(sys.argv) < 4:
-            print("Usage: python cf_api.py label <page_id> <label1> [label2] ...")
-            sys.exit(1)
-        page_id = sys.argv[2]
-        labels = sys.argv[3:]
-        add_labels(page_id, labels)
     else:
         print(f"Unknown command: {command}")
         print(__doc__)
