@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-"""Confluence REST API wrapper for getting and updating pages.
+"""Confluence REST API wrapper for getting, updating, and creating pages.
 
 Usage:
   python cf_api.py get <page_id>
   python cf_api.py update <page_id> <title> <content_file> <version> [message]
+  python cf_api.py create <parent_page_id> <title> <content_file>
+  python cf_api.py label <page_id> <label1> [label2] ...
 
 Credentials are auto-discovered from the running mcp-atlassian process environment,
 or can be set via CONFLUENCE_URL and CONFLUENCE_PERSONAL_TOKEN env vars.
@@ -220,6 +222,66 @@ def update_page(page_id, title, content_file, version, message="Updated by AI"):
     return output
 
 
+def create_page(parent_page_id, title, content_file):
+    """Create a child page under the given parent page."""
+    url, token = get_credentials()
+    base_url = ensure_https(url)
+
+    # Get parent page space key
+    parent_url = f"{base_url}/rest/api/content/{parent_page_id}?expand=space"
+    parent_info = api_request("GET", parent_url, token)
+    space_key = parent_info["space"]["key"]
+
+    with open(content_file, "r", encoding="utf-8") as f:
+        content = f.read()
+
+    data = {
+        "type": "page",
+        "title": title,
+        "ancestors": [{"id": str(parent_page_id)}],
+        "space": {"key": space_key},
+        "body": {
+            "storage": {
+                "value": content,
+                "representation": "storage",
+            }
+        },
+    }
+
+    api_url = f"{base_url}/rest/api/content"
+    result = api_request("POST", api_url, token, data)
+
+    page_id = result["id"]
+    output = {
+        "success": True,
+        "page_id": page_id,
+        "title": result["title"],
+        "version": result["version"]["number"],
+        "url": f"{base_url}/pages/viewpage.action?pageId={page_id}",
+    }
+    print(json.dumps(output, ensure_ascii=False, indent=2))
+    return output
+
+
+def add_labels(page_id, labels):
+    """Add labels to a page. Idempotent - adding existing labels is a no-op."""
+    url, token = get_credentials()
+    base_url = ensure_https(url)
+    api_url = f"{base_url}/rest/api/content/{page_id}/label"
+
+    data = [{"prefix": "global", "name": label} for label in labels]
+    result = api_request("POST", api_url, token, data)
+
+    output = {
+        "success": True,
+        "page_id": page_id,
+        "labels_added": labels,
+        "total_labels": len(result.get("results", [])),
+    }
+    print(json.dumps(output, ensure_ascii=False, indent=2))
+    return output
+
+
 def main():
     if len(sys.argv) < 3:
         print(__doc__)
@@ -240,6 +302,21 @@ def main():
         version = sys.argv[5]
         message = sys.argv[6] if len(sys.argv) > 6 else "Updated by AI"
         update_page(page_id, title, content_file, version, message)
+    elif command == "create":
+        if len(sys.argv) < 5:
+            print("Usage: python cf_api.py create <parent_page_id> <title> <content_file>")
+            sys.exit(1)
+        parent_page_id = sys.argv[2]
+        title = sys.argv[3]
+        content_file = sys.argv[4]
+        create_page(parent_page_id, title, content_file)
+    elif command == "label":
+        if len(sys.argv) < 4:
+            print("Usage: python cf_api.py label <page_id> <label1> [label2] ...")
+            sys.exit(1)
+        page_id = sys.argv[2]
+        labels = sys.argv[3:]
+        add_labels(page_id, labels)
     else:
         print(f"Unknown command: {command}")
         print(__doc__)
